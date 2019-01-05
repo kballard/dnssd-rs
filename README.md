@@ -1,5 +1,7 @@
 # Rust dns-sd Wrapper
 
+[![Build Status](https://travis-ci.com/jfro/dnssd-rs.svg?branch=master)](https://travis-ci.com/jfro/dnssd-rs)
+
 My attempt to learn wrapping C APIs in Rust, and aim for a minimal but friendly safe wrapper around dns-sd(Bonjour, mDNS, Zeroconf DNS) APIs.
 
 ## Status

@@ -133,34 +133,36 @@ impl DNSService {
     //     }
     // }
 
-    unsafe extern "C" fn register_reply(_sd_ref: DNSServiceRef, _flags: DNSServiceFlags, error_code: DNSServiceErrorType, name: *const c_char, regtype: *const c_char, domain: *const c_char, context: *mut c_void) {
-        let context: &mut DNSService = &mut *(context as *mut DNSService);
-        let process = || -> Result<(String, String, String), DNSServiceError> {
-            let c_str: &CStr = CStr::from_ptr(name);
-            let service_name: &str = c_str.to_str().map_err(|_| DNSServiceError::InternalInvalidString)?;
-            let c_str: &CStr = CStr::from_ptr(regtype);
-            let regtype: &str = c_str.to_str().map_err(|_| DNSServiceError::InternalInvalidString)?;
-            let c_str: &CStr = CStr::from_ptr(domain);
-            let reply_domain: &str = c_str.to_str().map_err(|_| DNSServiceError::InternalInvalidString)?;
-            Ok((service_name.to_owned(), regtype.to_owned(), reply_domain.to_owned()))
-        };
-        match process() {
-            Ok((name, regtype, domain)) => {
-                if error_code == kDNSServiceErr_NoError {
-                    let reply = DNSServiceRegisterReply {
-                        regtype,
-                        name,
-                        domain,
-                    };
-                    (context.reply_callback)(Ok(reply));
-                }
-                else {
-                    (context.reply_callback)(Err(DNSServiceError::ServiceError(error_code)));
-                } 
-            },
-            Err(e) => {
-                (context.reply_callback)(Err(e));
-            },
+    extern "C" fn register_reply(_sd_ref: DNSServiceRef, _flags: DNSServiceFlags, error_code: DNSServiceErrorType, name: *const c_char, regtype: *const c_char, domain: *const c_char, context: *mut c_void) {
+        unsafe {
+            let context: &mut DNSService = &mut *(context as *mut DNSService);
+            let process = || -> Result<(String, String, String), DNSServiceError> {
+                let c_str: &CStr = CStr::from_ptr(name);
+                let service_name: &str = c_str.to_str().map_err(|_| DNSServiceError::InternalInvalidString)?;
+                let c_str: &CStr = CStr::from_ptr(regtype);
+                let regtype: &str = c_str.to_str().map_err(|_| DNSServiceError::InternalInvalidString)?;
+                let c_str: &CStr = CStr::from_ptr(domain);
+                let reply_domain: &str = c_str.to_str().map_err(|_| DNSServiceError::InternalInvalidString)?;
+                Ok((service_name.to_owned(), regtype.to_owned(), reply_domain.to_owned()))
+            };
+            match process() {
+                Ok((name, regtype, domain)) => {
+                    if error_code == kDNSServiceErr_NoError {
+                        let reply = DNSServiceRegisterReply {
+                            regtype,
+                            name,
+                            domain,
+                        };
+                        (context.reply_callback)(Ok(reply));
+                    }
+                    else {
+                        (context.reply_callback)(Err(DNSServiceError::ServiceError(error_code)));
+                    } 
+                },
+                Err(e) => {
+                    (context.reply_callback)(Err(e));
+                },
+            }
         }
     }
 
